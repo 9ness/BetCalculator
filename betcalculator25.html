@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="UTF-8"/>
+	
+	<script>
+/* Poner tema antes de pintar CSS: por defecto oscuro */
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t === 'light' || t === 'dark'){
+      document.documentElement.setAttribute('data-theme', t);
+    }else{
+      document.documentElement.setAttribute('data-theme', 'dark'); // default
+    }
+  }catch(e){
+    document.documentElement.setAttribute('data-theme','dark');
+  }
+})();
+</script>
+	</head>
+		<style>
+/* ===== TOKENS DE TEMA ===== */
+:root{
+  /* Paleta común azul/teal (tu identidad) */
+  --primary:#11a8b6;
+  --primary-700:#0d7f90;
+  --accent:#2db9f3;
+
+  /* Light (valores por defecto; se sobreescriben si se fuerza dark) */
+  --bg:#f6f9ff;
+  --surface:#ffffff;
+  --border:#e6eaf2;
+  --text:#0f172a;
+  --muted:#5b6b80;
+  --input-bg:#ffffff;
+  --chip-bg:#eff9ff;
+  --chip-text:#0a4250;
+
+  --radius:16px;
+}
+
+/* Light explícito */
+[data-theme="light"]{
+  --bg:#f6f9ff; --surface:#ffffff; --border:#e6eaf2;
+  --text:#0f172a; --muted:#5b6b80;
+  --input-bg:#ffffff; --chip-bg:#eff9ff; --chip-text:#0a4250;
+}
+
+/* Dark con azules (POR DEFECTO lo aplicaremos vía JS) */
+[data-theme="dark"]{
+  --bg:#0b1220;              /* navy petróleo */
+  --surface:#101a2f;         /* card azul oscuro */
+  --border:#1e2a44;
+  --text:#e7edf7;
+  --muted:#a8b3c7;
+  --input-bg:#0d1528;        /* inputs oscuros (legibles) */
+  --chip-bg:#0e2233;         /* chips más integrados */
+  --chip-text:#d9f7ff;
+  --primary:#11a8b6;
+  --primary-700:#0d7f90;
+  --accent:#39bdf8;
+}
+
+/* Si el usuario elige AUTO (sin data-theme), respetamos el sistema */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme]){
+    --bg:#0b1220; --surface:#101a2f; --border:#1e2a44;
+    --text:#e7edf7; --muted:#a8b3c7;
+    --input-bg:#0d1528; --chip-bg:#0e2233; --chip-text:#d9f7ff;
+    --primary:#11a8b6; --primary-700:#0d7f90; --accent:#39bdf8;
+  }
+}
+
+
+/* ===== BASE ===== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; padding:32px 16px;
+  font:500 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  color:var(--text);
+  background:linear-gradient(180deg,var(--bg) 0%, color-mix(in srgb, var(--bg) 85%, #000) 100%);
+}
+
+/* Tarjetas */
+body > form{
+  position:static; left:auto;
+  width:min(720px,92vw);
+  margin:12px auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  box-shadow:0 8px 24px rgba(2,8,23,.06);
+}
+
+/* Cabecera con radios + toggle tema */
+form.a{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+form.a input[type="radio"]{width:20px; height:20px; accent-color:var(--primary); cursor:pointer}
+
+/* Toggle de tema */
+.theme-toggle{margin-left:auto; display:flex; gap:6px; padding:4px; border-radius:999px;
+  background:color-mix(in srgb, var(--surface) 60%, #000);
+  border:1px solid var(--border);
+}
+.theme-toggle button{
+  appearance:none; border:0; cursor:pointer; font:600 12px/1.1 inherit;
+  padding:8px 10px; border-radius:999px; color:var(--muted); background:transparent;
+  transition:background .15s ease, color .15s ease, transform .06s ease;
+}
+.theme-toggle button:hover{transform:translateY(-1px)}
+.theme-toggle button[aria-pressed="true"]{
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  color:#fff; box-shadow:0 6px 14px rgba(0,0,0,.18);
+}
+
+/* Bloques de inputs */
+form.b, form.c, form.e{display:flex; flex-direction:column; gap:10px}
+form.b, form.c{font-weight:600; color:var(--muted)}
+
+/* Inputs (OSCUROS en dark; CLAROS en light) */
+input[type="number"]{
+  width:100%; padding:12px 14px; font-size:16px;
+  border:1px solid var(--border);
+  border-radius:12px; background:var(--input-bg); color:var(--text);
+  outline:none;
+  transition:border-color .2s ease, box-shadow .2s ease, transform .06s ease, background .2s ease, color .2s ease;
+}
+input::placeholder{color:color-mix(in srgb, var(--muted) 70%, transparent)}
+input[type="number"]:focus-visible{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--primary) 26%, transparent);
+}
+input[type="number"]:active{transform:scale(0.997)}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+input[type=number]{-moz-appearance:textfield}
+
+/* Bloque resultado (degradado azul → teal, más suave) */
+.d{
+  text-align:left; color:#fff; border:none;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+}
+.d b{color:#fff}
+
+/* Chips (mejor contraste en ambos temas) */
+.casilla,.casilla2{
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.35rem .9rem; border-radius:999px; font-weight:700;
+  background:var(--chip-bg); color:var(--chip-text);
+  border:1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+  box-shadow:inset 0 -1px 0 rgba(2,8,23,.06);
+  font-variant-numeric: tabular-nums;
+}
+.casilla a,.casilla2 a{color:inherit; text-decoration:none}
+.casilla2{padding-left:1.3rem; padding-right:1.3rem}
+
+/* Ganancia + rating */
+.e{text-align:center}
+.e span strong{font-weight:800}
+.e .ganancia{
+  padding:.12rem .5rem; border-radius:.5rem;
+  background:color-mix(in srgb, var(--accent) 18%, transparent);
+  color:color-mix(in srgb, var(--primary-700) 55%, #063d45);
+}
+span{color:inherit}
+.rating{font-size:.9rem; color:var(--muted)}
+
+/* Reembolso (lo controla tu JS) */
+#esc{display:none}
+
+/* Responsive */
+@media (max-width:480px){
+  body{padding:24px 12px}
+  body > form{padding:14px}
+}
+</style>
+
+
+
+	<body>
+		<form class= "a">
+			<input type="radio" name="tipo" checked id="radio1" onClick="myFunction()">DINERO REAL 
+			<input type="radio" id="radio2" name="tipo" onClick="myFunction()">FREEBET
+            <input type="radio" id="radio3" name="tipo" onClick="myFunction()">REEMBOLSO
+			<span class="theme-toggle" role="group" aria-label="Tema">
+  <button type="button" data-theme-btn="dark" aria-pressed="true" title="Oscuro">🌙</button>
+  <button type="button" data-theme-btn="light" title="Claro">☀️</button>
+</span>
+		</form>
+		<form class="b">
+			FAVOR 1 - IMPORTE APUESTA
+			<input type="number" id="importe1" oninput="myFunction()">
+			</br>
+            <div id="esc">
+            </br>
+            FAVOR 1 - IMPORTE REEMBOLSO
+			<input type="number" id="importeReembolso" oninput="myFunction()">
+            </div>
+            </br>
+			FAVOR 1 - CUOTA
+			<input type="number" id="cuota1" oninput="myFunction()">
+			</br>
+		</form>
+		<form class="c">
+			FAVOR 2 - CUOTA
+			<input type="number" id="cuota2" oninput="myFunction()">
+		</form>
+		<form class="d">
+			APUESTA A FAVOR 1 <b><span class="casilla"><a id="cantidad1"></a></span></b> A CUOTA <b><span class="casilla"><a id="cantidadcuota1"></a></span></b>
+			</br></br>
+			APUESTA A FAVOR 2 <b><span class="casilla2"><a id="cantidad2"></a></span></b> A CUOTA <b><span class="casilla"><a id="cantidadcuota2"></a></span></b>
+		</form>
+		<form class="e">
+			<span><strong>GANARÁS: </strong><b class="ganancia"><a id="ganancia"></a></b></span>
+		</br></br>
+			<span class="rating"><strong>[ RATING: </strong><b><a id="rating"></a>]</b></span>
+		</form>
+
+		<script>
+		function myFunction() {
+		  var x = document.getElementById("importe1").value;
+		   var y = document.getElementById("cuota1").value;
+			var z = document.getElementById("cuota2").value;
+            	var w = document.getElementById("importeReembolso").value;
+				
+				
+		  
+		  if(document.getElementById("radio1").checked){
+		  document.getElementById("cantidad1").innerHTML = x + "€";
+		  document.getElementById("cantidadcuota1").innerHTML = y;
+		  document.getElementById("cantidadcuota2").innerHTML = z;
+		  
+		  document.getElementById("cantidad2").innerHTML = (parseFloat(x) * parseFloat(y) / parseFloat(z)).toFixed(2) + "€";
+		  
+		  document.getElementById("ganancia").innerHTML = ((parseFloat(x) * (parseFloat(y) - 1)) - (parseFloat(x) * parseFloat(y) / parseFloat(z))).toFixed(2) + "€";
+		  
+		  document.getElementById("rating").innerHTML = ((100 * (parseFloat(x) + ((parseFloat(x) * (parseFloat(y) - 1)) - (parseFloat(x) * parseFloat(y) / parseFloat(z))))) / parseFloat(x)).toFixed(2) + "%";
+		  
+		  }
+		  
+		   if(document.getElementById("radio2").checked){
+				document.getElementById("cantidad1").innerHTML = x + "€";
+				document.getElementById("cantidadcuota1").innerHTML = y;
+				document.getElementById("cantidadcuota2").innerHTML = z;
+				document.getElementById("cantidad2").innerHTML = ((parseFloat(x) * (parseFloat(y) - 1)) / parseFloat(z)).toFixed(2) + "€";
+		   
+		   document.getElementById("ganancia").innerHTML = (((parseFloat(x) * parseFloat(y))-parseFloat(x)) 
+			- ((parseFloat(x) * (parseFloat(y) - 1)) / parseFloat(z))).toFixed(2) + "€";
+		   
+		   document.getElementById("rating").innerHTML = ((100 * (((parseFloat(x) * parseFloat(y))-parseFloat(x)) 
+			- ((parseFloat(x) * (parseFloat(y) - 1)) / parseFloat(z)))) / parseFloat(x)).toFixed(2) + "%";
+		   
+		   }
+           
+           
+           if(document.getElementById("radio3").checked){
+         	document.getElementById("esc").style.display = "block";
+             document.getElementById("cantidad1").innerHTML = x + "€";
+		  document.getElementById("cantidadcuota1").innerHTML = y;
+            document.getElementById("cantidadcuota2").innerHTML = z;
+            document.getElementById("cantidad2").innerHTML = (((parseFloat(x) * parseFloat(y)) - 
+            parseFloat(w)) / parseFloat(z)).toFixed(2) + "€";
+            document.getElementById("ganancia").innerHTML = ((parseFloat(x) * (parseFloat(y) - 1))
+            - ((parseFloat(x) * parseFloat(y)) - 
+            parseFloat(w)) / parseFloat(z)).toFixed(2) + "€";
+            document.getElementById("rating").innerHTML = 
+            ((((parseFloat(x) * (parseFloat(y) - 1)) - ((parseFloat(x) * parseFloat(y)) - 
+            parseFloat(w)) / parseFloat(z)) * 100) / parseFloat(w)).toFixed(2) + "%"; 
+            
+            
+            
+            
+         }else{
+         	document.getElementById("esc").style.display = "none";
+         }
+		  
+		}
+        
+         
+        
+        
+		</script>
+		
+<script>
+/* ===== THEME HELPER =====
+   Por defecto: oscuro (si no hay preferencia guardada).
+   setTheme('dark'|'light'|'auto')
+*/
+(function initTheme(){
+  const saved = localStorage.getItem('theme');
+  if(saved === 'light'){
+    document.documentElement.setAttribute('data-theme','light');
+  }else{
+    document.documentElement.setAttribute('data-theme','dark');  // default
+    if(saved !== 'dark') localStorage.setItem('theme','dark');
+  }
+  syncToggleUI();
+})();
+
+function setTheme(mode){
+  const m = (mode === 'light') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', m);
+  localStorage.setItem('theme', m);
+  syncToggleUI();
+}
+
+function syncToggleUI(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  document.querySelectorAll('[data-theme-btn]').forEach(btn=>{
+    btn.setAttribute('aria-pressed', btn.dataset.themeBtn === current ? 'true' : 'false');
+  });
+}
+
+// Listeners para los botones del toggle
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-theme-btn]');
+  if(!btn) return;
+  setTheme(btn.dataset.themeBtn);
+});
+</script>
+
+	</body>
+</html>
